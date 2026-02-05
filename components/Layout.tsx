@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import DynamicBackground from './DynamicBackground';
 
@@ -14,6 +14,7 @@ const navLinks = [
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -29,18 +30,33 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return () => observer.disconnect();
   }, [location]);
 
+  // Handle body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMenuOpen]);
+
+  // Close menu when location changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white relative">
       <DynamicBackground />
       
       {/* Header */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#0d1b2a]/10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <nav className="sticky top-0 z-[100] bg-white border-b border-[#0d1b2a]/10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative z-[110] bg-white">
           <Link to="/" className="flex flex-col group">
             <span className="serif text-2xl font-bold tracking-widest text-[#0d1b2a] uppercase group-hover:text-[#B38B3F] transition-colors">Rajyatantra</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-[#415a77] font-semibold -mt-1 group-hover:text-[#B38B3F]/70 transition-colors">Policy & Governance Consulting</span>
           </Link>
           
+          {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -57,11 +73,57 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             ))}
           </div>
           
-          <button className="md:hidden text-[#0d1b2a]">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden text-[#0d1b2a] p-2 focus:outline-none"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
+          >
+            {isMenuOpen ? (
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
+        </div>
+
+        {/* Mobile Navigation Overlay - White Background Version */}
+        <div 
+          className={`fixed inset-0 z-[90] bg-white transition-all duration-300 ease-in-out transform md:hidden flex flex-col pt-20 ${
+            isMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+          }`}
+        >
+          <div className="flex-grow flex flex-col px-6 py-10 overflow-y-auto">
+            <div className="space-y-2">
+              {navLinks.map((link, idx) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block py-6 serif text-3xl font-bold tracking-tight border-b border-slate-100 transition-all ${
+                    location.pathname === link.path 
+                      ? 'text-[#B38B3F] pl-4 border-l-4 border-l-[#B38B3F]' 
+                      : 'text-[#0d1b2a] hover:text-[#B38B3F] hover:pl-4'
+                  }`}
+                  style={{ 
+                    transitionDelay: isMenuOpen ? `${idx * 40}ms` : '0ms'
+                  }}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-auto py-12 text-center">
+               <div className="h-px w-16 bg-[#B38B3F]/30 mx-auto mb-6"></div>
+               <p className="text-[10px] uppercase tracking-[0.4em] text-[#778da9] font-bold">Administrative Advisory</p>
+               <p className="text-[9px] uppercase tracking-[0.2em] text-[#415a77] mt-2">New Delhi, India</p>
+            </div>
+          </div>
         </div>
       </nav>
 
